@@ -3,10 +3,10 @@
     "step": {
       "user": {
         "title": "WB-MR6C v3",
-        "description": "Подключение к реле WB-MR6C v3 по Modbus TCP",
+        "description": "Подключение к реле WB-MR6C v3 по Modbus RTU (USB-RS485)",
         "data": {
-          "host": "IP-адрес",
-          "port": "Порт",
+          "serial_port": "Последовательный порт (например, /dev/ttyUSB0)",
+          "baudrate": "Скорость (бод)",
           "unit_id": "Modbus адрес устройства"
         }
       }

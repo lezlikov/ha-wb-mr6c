@@ -3,14 +3,14 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.modbus import async_get_temporary_unit
-from modbus_connection import ModbusTcpParams
+from modbus_connection import ModbusSerialParams
 
 from .const import (
     DOMAIN,
-    CONF_HOST,
-    CONF_PORT,
+    CONF_SERIAL_PORT,
+    CONF_BAUDRATE,
     CONF_UNIT_ID,
-    DEFAULT_PORT,
+    DEFAULT_BAUDRATE,
     DEFAULT_UNIT_ID,
 )
 
@@ -18,8 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Required(CONF_SERIAL_PORT): str,
+        vol.Required(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): int,
         vol.Required(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): int,
     }
 )
@@ -35,12 +35,15 @@ class WBMR6CConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                # Проверка подключения через временный unit
                 async with async_get_temporary_unit(
                     self.hass,
-                    ModbusTcpParams(
-                        host=user_input[CONF_HOST],
-                        port=user_input[CONF_PORT],
+                    ModbusSerialParams(
+                        device=user_input[CONF_SERIAL_PORT],
+                        baudrate=user_input[CONF_BAUDRATE],
+                        bytesize=8,
+                        parity="N",
+                        stopbits=2,
+                        framer="rtu",
                     ),
                     user_input[CONF_UNIT_ID],
                 ) as unit:
@@ -51,7 +54,7 @@ class WBMR6CConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
-                    title=f"WB-MR6C ({user_input[CONF_HOST]})",
+                    title=f"WB-MR6C ({user_input[CONF_SERIAL_PORT]})",
                     data=user_input,
                 )
 

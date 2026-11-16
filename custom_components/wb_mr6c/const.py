@@ -1,10 +1,10 @@
 DOMAIN = "wb_mr6c"
 
-CONF_HOST = "host"
-CONF_PORT = "port"
+CONF_SERIAL_PORT = "serial_port"
+CONF_BAUDRATE = "baudrate"
 CONF_UNIT_ID = "unit_id"
 
-DEFAULT_PORT = 502
+DEFAULT_BAUDRATE = 9600
 DEFAULT_UNIT_ID = 1
 
 # Адреса Coil для каналов реле 1-6 (WB-MR6C v.3)

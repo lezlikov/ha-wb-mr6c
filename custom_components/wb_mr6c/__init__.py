@@ -3,9 +3,9 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.components.modbus import async_get_unit
-from modbus_connection import ModbusTcpParams
+from modbus_connection import ModbusSerialParams
 
-from .const import DOMAIN, CONF_HOST, CONF_PORT, CONF_UNIT_ID
+from .const import DOMAIN, CONF_SERIAL_PORT, CONF_BAUDRATE, CONF_UNIT_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,9 +17,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unit = async_get_unit(
         hass,
         entry,
-        ModbusTcpParams(
-            host=entry.data[CONF_HOST],
-            port=entry.data[CONF_PORT],
+        ModbusSerialParams(
+            device=entry.data[CONF_SERIAL_PORT],
+            baudrate=entry.data[CONF_BAUDRATE],
+            bytesize=8,
+            parity="N",
+            stopbits=2,
+            framer="rtu",
         ),
         entry.data[CONF_UNIT_ID],
     )
