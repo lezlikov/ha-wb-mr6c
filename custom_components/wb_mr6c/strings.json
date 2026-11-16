@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "WB-MR6C v3",
+        "description": "Подключение к реле WB-MR6C v3 по Modbus TCP",
+        "data": {
+          "host": "IP-адрес",
+          "port": "Порт",
+          "unit_id": "Modbus адрес устройства"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Не удалось подключиться к устройству",
+      "unknown": "Неизвестная ошибка"
+    },
+    "abort": {
+      "already_configured": "Устройство уже настроено"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "domain": "wb_mr6c",
+  "name": "WB-MR6C v3",
+  "version": "0.1.0",
+  "config_flow": true,
+  "iot_class": "local_polling",
+  "requirements": ["modbus-connection"],
+  "codeowners": ["@okop2000"],
+  "documentation": "https://github.com/okop2000/ha-wb-mr6c",
+  "issue_tracker": "https://github.com/okop2000/ha-wb-mr6c/issues"
+}
