@@ -5,7 +5,7 @@ CONF_BAUDRATE = "baudrate"
 CONF_UNIT_ID = "unit_id"
 
 DEFAULT_BAUDRATE = 9600
-DEFAULT_UNIT_ID = 1
+DEFAULT_UNIT_ID = 151  # Изменено с 1 на 151 (ваш реальный адрес)
 
 # Адреса Coil для каналов реле 1-6 (WB-MR6C v.3)
 RELAY_COILS = {

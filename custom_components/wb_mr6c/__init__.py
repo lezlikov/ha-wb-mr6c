@@ -24,6 +24,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             parity="N",
             stopbits=2,
             framer="rtu",
+            timeout=3,
+            delay=1,
         ),
         entry.data[CONF_UNIT_ID],
     )

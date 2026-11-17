@@ -44,6 +44,8 @@ class WBMR6CConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         parity="N",
                         stopbits=2,
                         framer="rtu",
+                        timeout=3,
+                        delay=1,
                     ),
                     user_input[CONF_UNIT_ID],
                 ) as unit:
