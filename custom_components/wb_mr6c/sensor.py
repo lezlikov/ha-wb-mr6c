@@ -37,14 +37,9 @@ class WBMR6CFirmwareCoordinator(DataUpdateCoordinator):
             registers = await self.unit.read_input_registers(
                 FW_VERSION_START, FW_VERSION_COUNT
             )
-            _LOGGER.warning("Сырые регистры прошивки: %s", registers)
-
-            raw_bytes = b"".join(
-                reg.to_bytes(2, byteorder="big") for reg in registers
-            )
-            _LOGGER.warning("Байты: %s", raw_bytes)
-
-            version = raw_bytes.split(b"\x00")[0].decode("ascii", errors="ignore")
+            # Берем младший байт из каждого регистра и декодируем
+            raw_bytes = bytes([reg & 0xFF for reg in registers if reg != 0])
+            version = raw_bytes.decode("ascii", errors="ignore")
             _LOGGER.warning("Декодированная версия: '%s'", version)
             return version
         except ModbusError as err:
