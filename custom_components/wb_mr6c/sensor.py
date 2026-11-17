@@ -17,7 +17,6 @@ from .const import DOMAIN, CONF_UNIT_ID
 
 _LOGGER = logging.getLogger(__name__)
 
-# Адрес и количество регистров для версии прошивки (строка)
 FW_VERSION_START = 250
 FW_VERSION_COUNT = 16
 
@@ -28,15 +27,15 @@ class WBMR6CFirmwareCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name="wb_mr6c_firmware",
-            update_interval=timedelta(hours=1),  # Проверять раз в час
+            update_interval=timedelta(hours=1),
         )
         self.unit = unit
         self.slave_id = slave_id
 
     async def _async_update_data(self):
         try:
-            # Читаем 16 holding-регистров, начиная с 250
-            registers = await self.unit.read_holding_registers(
+            # Читаем Input-регистры (а не Holding)
+            registers = await self.unit.read_input_registers(
                 FW_VERSION_START, FW_VERSION_COUNT
             )
             # Декодируем байты в строку (null-terminated)
