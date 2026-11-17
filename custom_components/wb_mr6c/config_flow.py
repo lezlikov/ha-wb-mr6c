@@ -49,7 +49,7 @@ class WBMR6CConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input[CONF_UNIT_ID],
                 ) as unit:
                     # Пробное чтение одного Coil-регистра (канал 1)
-                    await unit.read_coil(0)
+                    await unit.read_coils(0)
             except Exception:
                 _LOGGER.exception("Не удалось подключиться к WB-MR6C")
                 errors["base"] = "cannot_connect"

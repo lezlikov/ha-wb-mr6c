@@ -30,9 +30,9 @@ class WBMR6CCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self):
         try:
             return {
-                channel: await self.unit.read_coil(coil)
-                for channel, coil in RELAY_COILS.items()
-            }
+    channel: (await self.unit.read_coils(coil, 1))[0]
+    for channel, coil in RELAY_COILS.items()
+}
         except ModbusError as err:
             raise UpdateFailed(f"Ошибка чтения Modbus: {err}") from err
 
