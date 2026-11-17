@@ -9,7 +9,7 @@ from .const import DOMAIN, CONF_SERIAL_PORT, CONF_BAUDRATE, CONF_UNIT_ID
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["switch"]
+PLATFORMS = ["switch", "sensor"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
