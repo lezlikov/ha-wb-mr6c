@@ -1,24 +1,75 @@
-from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+import logging
+from datetime import timedelta
+
 from homeassistant.components.switch import SwitchEntity
-# ... другие импорты ...
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
+from modbus_connection import ModbusError
+
+from .const import DOMAIN, RELAY_COILS, SCAN_INTERVAL_SECONDS
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class WBMR6CCoordinator(DataUpdateCoordinator):
+    def __init__(self, hass: HomeAssistant, unit, slave_id: int):
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="wb_mr6c",
+            update_interval=timedelta(seconds=SCAN_INTERVAL_SECONDS),
+        )
+        self.unit = unit
+        self.slave_id = slave_id
+
+    async def _async_update_data(self):
+        try:
+            # Читаем 6 катушек, начиная с адреса 0
+            states = await self.unit.read_coils(0, len(RELAY_COILS))
+            return {channel: states[i] for i, channel in enumerate(RELAY_COILS)}
+        except ModbusError as err:
+            raise UpdateFailed(f"Ошибка чтения Modbus: {err}") from err
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+):
+    unit = hass.data[DOMAIN][entry.entry_id]
+    
+    # Получаем Modbus-адрес из конфигурации (он нам нужен для DeviceInfo)
+    # В нашем __init__.py мы сохраняем только unit, но адрес можно взять из entry.data
+    from .const import CONF_UNIT_ID
+    slave_id = entry.data[CONF_UNIT_ID]
+
+    coordinator = WBMR6CCoordinator(hass, unit, slave_id)
+    await coordinator.async_config_entry_first_refresh()
+
+    async_add_entities(
+        WBRelaySwitch(coordinator, channel) for channel in RELAY_COILS
+    )
+
 
 class WBRelaySwitch(CoordinatorEntity, SwitchEntity):
     def __init__(self, coordinator: WBMR6CCoordinator, channel: int):
         super().__init__(coordinator)
         self._channel = channel
-        self._attr_name = f"WB-MR6C Реле {channel}"
-        self._attr_unique_id = f"wb_mr6c_relay_{channel}"
+        self._attr_name = f"Реле {channel}"
+        self._attr_unique_id = f"wb_mr6c_relay_{coordinator.slave_id}_{channel}"
         self._attr_is_on = False
 
     @property
     def device_info(self) -> DeviceInfo:
-        # self.coordinator.unit.slave — это Modbus-адрес, который вы указали (151, 152 и т.д.)
-        # Если атрибут называется иначе, проверьте в объекте unit
-        slave_id = getattr(self.coordinator.unit, 'slave', 'unknown') 
+        """Информация об устройстве для группировки сущностей."""
         return DeviceInfo(
-            identifiers={(DOMAIN, f"wb_mr6c_{slave_id}")},
-            name=f"WB-MR6C (ID: {slave_id})",
+            identifiers={(DOMAIN, f"wb_mr6c_{self.coordinator.slave_id}")},
+            name=f"WB-MR6C (ID: {self.coordinator.slave_id})",
             manufacturer="Wiren Board",
             model="WB-MR6C v.3",
         )
@@ -28,6 +79,7 @@ class WBRelaySwitch(CoordinatorEntity, SwitchEntity):
         return self.coordinator.data.get(self._channel, False)
 
     async def async_turn_on(self, **kwargs):
+        # Пишем в Coil-регистр (адрес канала соответствует адресу Coil)
         await self.coordinator.unit.write_coil(RELAY_COILS[self._channel], True)
         await self.coordinator.async_request_refresh()
 
