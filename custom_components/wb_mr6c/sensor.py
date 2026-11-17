@@ -34,15 +34,18 @@ class WBMR6CFirmwareCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self):
         try:
-            # Читаем Input-регистры (а не Holding)
             registers = await self.unit.read_input_registers(
                 FW_VERSION_START, FW_VERSION_COUNT
             )
-            # Декодируем байты в строку (null-terminated)
+            _LOGGER.warning("Сырые регистры прошивки: %s", registers)
+
             raw_bytes = b"".join(
                 reg.to_bytes(2, byteorder="big") for reg in registers
             )
+            _LOGGER.warning("Байты: %s", raw_bytes)
+
             version = raw_bytes.split(b"\x00")[0].decode("ascii", errors="ignore")
+            _LOGGER.warning("Декодированная версия: '%s'", version)
             return version
         except ModbusError as err:
             raise UpdateFailed(f"Ошибка чтения версии прошивки: {err}") from err
