@@ -40,7 +40,6 @@ class WBMR6CFirmwareCoordinator(DataUpdateCoordinator):
             # Берем младший байт из каждого регистра и декодируем
             raw_bytes = bytes([reg & 0xFF for reg in registers if reg != 0])
             version = raw_bytes.decode("ascii", errors="ignore")
-            _LOGGER.warning("Декодированная версия: '%s'", version)
             return version
         except ModbusError as err:
             raise UpdateFailed(f"Ошибка чтения версии прошивки: {err}") from err
