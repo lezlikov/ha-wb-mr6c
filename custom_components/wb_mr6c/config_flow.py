@@ -54,6 +54,12 @@ class WBMR6CConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Не удалось подключиться к WB-MR6C")
                 errors["base"] = "cannot_connect"
             else:
+                # Уникальный ID комбинации порт + адрес
+                await self.async_set_unique_id(
+                    f"{user_input[CONF_SERIAL_PORT]}_{user_input[CONF_UNIT_ID]}"
+                )
+                self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(
                     title=f"WB-MR6C ({user_input[CONF_SERIAL_PORT]})",
                     data=user_input,

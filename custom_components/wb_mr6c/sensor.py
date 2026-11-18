@@ -13,7 +13,12 @@ from homeassistant.helpers.update_coordinator import (
 )
 from modbus_connection import ModbusError
 
-from .const import DOMAIN, CONF_UNIT_ID
+from .const import (
+    DOMAIN, 
+    CONF_UNIT_ID,
+    DEVICE_MODEL_START,
+    DEVICE_MODEL_COUNT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,16 +50,48 @@ class WBMR6CFirmwareCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"Ошибка чтения версии прошивки: {err}") from err
 
 
+class WBMR6CModelCoordinator(DataUpdateCoordinator):
+    def __init__(self, hass: HomeAssistant, unit, slave_id: int):
+        super().__init__(
+            hass,
+            _LOGGER,
+            name="wb_mr6c_model",
+            update_interval=timedelta(hours=1),
+        )
+        self.unit = unit
+        self.slave_id = slave_id
+
+    async def _async_update_data(self):
+        try:
+            registers = await self.unit.read_input_registers(
+                DEVICE_MODEL_START, DEVICE_MODEL_COUNT
+            )
+            # Преобразуем список регистров в строку
+            raw_bytes = bytes([reg & 0xFF for reg in registers if reg != 0])
+            model = raw_bytes.decode("ascii", errors="ignore")
+            return model
+        except ModbusError as err:
+            raise UpdateFailed(f"Ошибка чтения модели устройства: {err}") from err
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ):
     unit = hass.data[DOMAIN][entry.entry_id]
     slave_id = entry.data[CONF_UNIT_ID]
 
-    coordinator = WBMR6CFirmwareCoordinator(hass, unit, slave_id)
-    await coordinator.async_config_entry_first_refresh()
+    # Создаем координатор для версии прошивки
+    fw_coordinator = WBMR6CFirmwareCoordinator(hass, unit, slave_id)
+    await fw_coordinator.async_config_entry_first_refresh()
 
-    async_add_entities([WBFirmwareSensor(coordinator)])
+    # Создаем координатор для модели устройства
+    model_coordinator = WBMR6CModelCoordinator(hass, unit, slave_id)
+    await model_coordinator.async_config_entry_first_refresh()
+
+    async_add_entities([
+        WBFirmwareSensor(fw_coordinator),
+        WBModelSensor(model_coordinator),
+    ])
 
 
 class WBFirmwareSensor(CoordinatorEntity, SensorEntity):
@@ -63,6 +100,24 @@ class WBFirmwareSensor(CoordinatorEntity, SensorEntity):
         self._attr_name = "Версия прошивки"
         self._attr_unique_id = f"wb_mr6c_fw_{coordinator.slave_id}"
         self._attr_icon = "mdi:chip"
+
+    @property
+    def native_value(self):
+        return self.coordinator.data
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"wb_mr6c_{self.coordinator.slave_id}")},
+        )
+
+
+class WBModelSensor(CoordinatorEntity, SensorEntity):
+    def __init__(self, coordinator: WBMR6CModelCoordinator):
+        super().__init__(coordinator)
+        self._attr_name = "Модель устройства"
+        self._attr_unique_id = f"wb_mr6c_model_{coordinator.slave_id}"
+        self._attr_icon = "mdi:information-outline"
 
     @property
     def native_value(self):

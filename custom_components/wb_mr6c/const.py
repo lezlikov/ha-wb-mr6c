@@ -18,3 +18,6 @@ RELAY_COILS = {
 }
 
 SCAN_INTERVAL_SECONDS = 5
+# Адреса регистров модели устройства (Input Registers)
+DEVICE_MODEL_START = 200
+DEVICE_MODEL_COUNT = 6
