@@ -1,5 +1,5 @@
 {
-  "domain": "wb_mr6c",
+  "domain": "wirenboard_ha",
   "name": "WB-MR6C v3",
   "version": "0.1.0",
   "config_flow": true,
